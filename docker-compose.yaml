@@ -1,22 +1,60 @@
 version: '3.8'
 
 services:
+  # PostgreSQL service
   db:
     image: postgres
     restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: airflow_db
     ports:
       - '5432:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  # Adminer service to manage PostgreSQL
   adminer:
     image: adminer
     restart: always
     ports:
+      - '8081:8080'
+
+  # Airflow Webserver service
+  airflow-webserver:
+    image: apache/airflow:2.6.3
+    restart: always
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/airflow_db
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    ports:
       - '8080:8080'
+    depends_on:
+      - db
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+    command: webserver
+
+  # Airflow Scheduler service
+  airflow-scheduler:
+    image: apache/airflow:2.6.3
+    restart: always
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/airflow_db
+    depends_on:
+      - db
+      - airflow-webserver
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+    command: scheduler
 
 volumes:
   pgdata:
+    driver: local
