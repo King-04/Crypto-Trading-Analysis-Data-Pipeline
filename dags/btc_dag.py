@@ -92,5 +92,3 @@ with DAG('btc_data_pipeline',
 
     # Define task dependencies
     fetch_data >> load_data
-
-print(db_name)
