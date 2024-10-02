@@ -19,7 +19,7 @@ services:
     image: adminer
     restart: always
     ports:
-      - '8081:8080'
+      - '8082:8080'
 
   # Airflow Webserver service
   airflow-webserver:
@@ -33,7 +33,7 @@ services:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/airflow_db
       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     ports:
-      - '8080:8080'
+      - '8081:8080'
     depends_on:
       - db
     volumes:
