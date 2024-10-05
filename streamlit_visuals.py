@@ -4,6 +4,7 @@ import streamlit as st
 import psycopg2
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 
 load_dotenv()
@@ -38,6 +39,39 @@ st.title("Crypto Market Data Visualization")
 
 # Fetch the data from PostgreSQL
 df = get_data_from_db()
+
+# Sidebar for symbol selection
+symbols = df['symbol'].unique()
+selected_symbol = st.sidebar.selectbox("Select a cryptocurrency", symbols)
+
+# Filter data for selected symbol
+filtered_data = df[df['symbol'] == selected_symbol]
+
+# Moving Average (7-day and 30-day)
+filtered_data['MA7'] = filtered_data['price'].rolling(window=7).mean()
+filtered_data['MA30'] = filtered_data['price'].rolling(window=30).mean()
+
+# Plot Moving Average and Price Trend
+st.subheader(f"Price Trend with Moving Averages for {selected_symbol}")
+fig = go.Figure()
+fig.add_trace(go.Scatter(x=filtered_data['retrieval_time'], y=filtered_data['price'], mode='lines', name='Price'))
+fig.add_trace(go.Scatter(x=filtered_data['retrieval_time'], y=filtered_data['MA7'], mode='lines', name='MA 7'))
+fig.add_trace(go.Scatter(x=filtered_data['retrieval_time'], y=filtered_data['MA30'], mode='lines', name='MA 30'))
+st.plotly_chart(fig)
+
+
+# Candlestick Chart with Volume Bars
+st.subheader(f"Candlestick Chart with Volume for {selected_symbol}")
+candlestick_fig = go.Figure(data=[go.Candlestick(x=filtered_data['retrieval_time'],
+                open=filtered_data['price'] * 0.98,  # Simulated values
+                high=filtered_data['price'] * 1.02,
+                low=filtered_data['price'] * 0.97,
+                close=filtered_data['price'],
+                name='Candlestick')])
+candlestick_fig.add_trace(go.Bar(x=filtered_data['retrieval_time'], y=filtered_data['volume_24h'], name='Volume', marker_color='blue', opacity=0.5))
+st.plotly_chart(candlestick_fig)
+
+
 
 # Get the most recent data for each symbol
 latest_data = df.groupby('symbol').first().reset_index()

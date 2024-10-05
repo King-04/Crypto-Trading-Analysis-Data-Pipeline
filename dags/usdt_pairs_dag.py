@@ -109,7 +109,7 @@ default_args = {
 
 with DAG('usdt_pairs_data_clean_pipeline',
          default_args=default_args,
-         schedule_interval='*/2 * * * *',  # Run every 30 minutes
+         schedule_interval='*/20 * * * *',  # Run every 20 minutes
          catchup=False) as dag:
 
     # Task to extract raw USDT pairs data
